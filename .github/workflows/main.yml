@@ -41,5 +41,5 @@ jobs:
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.TOKENS}}  # Fixed secret name
+          github_token: ${{ secrets.GITHUB_TOKEN}}  # Fixed secret name
           publish_dir: ./dist  # Ensure Vite's `base` is set correctly in vite.config.ts
