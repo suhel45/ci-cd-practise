@@ -1,45 +1,39 @@
-name: React App Deployment # Workflow name
-
-on:
-  push:
-    branches:
-      - main # Branch to trigger the deployment
-
+name: DevOps-GitHibActions
+on: push
 jobs:
-  deploy-react-to-gh-pages:
+  # Build Job
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      # Checkout the repository
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # Setup Node.js environment
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v4
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Install Node
+        uses: actions/setup-node@v3
         with:
-          node-version: "18"
-
-      # Cache dependencies
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      # Install dependencies
-      - name: Install dependencies
-        run: npm ci  # Faster and safer than `npm i`
-
-      # Build the React app
-      - name: Build
+          node-version: 18.x
+      - name: Install Dependencies
+        run: npm install
+      - name: Build Project
         run: npm run build
-
-      # Deploy to GitHub Pages
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload artifact to enable deployment
+        uses: actions/upload-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN}}  # Fixed secret name
-          publish_dir: ./dist  # Ensure Vite's `base` is set correctly in vite.config.ts
+          name: production-files
+          path: ./dist
+  # Deploy Job
+  deploy:
+    # Add a dependency to the build job
+    needs: build
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: production-files
+          path: ./dist
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
